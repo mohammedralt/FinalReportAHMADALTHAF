@@ -1,0 +1,220 @@
+import pandas as pd
+import numpy as np
+import kagglehub  # Assuming kagglehub is your custom module for downloading datasets
+
+import kagglehub
+
+# Download latest version
+path = kagglehub.dataset_download("malayvyas/usa-gdp-dataset-19612021")
+
+print("Path to dataset files:", path)
+
+# Load vaccine data
+vaccine_data_url = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/us_state_vaccinations.csv"
+vaccine_data = pd.read_csv(vaccine_data_url)
+
+
+import pandas as pd
+import numpy as np
+import kagglehub  # Assuming kagglehub is your custom module for downloading datasets
+import os
+
+import kagglehub
+
+# Download latest version
+path = kagglehub.dataset_download("malayvyas/usa-gdp-dataset-19612021")
+
+print("Path to dataset files:", path)
+
+# Load vaccine data
+vaccine_data_url = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/us_state_vaccinations.csv"
+vaccine_data = pd.read_csv(vaccine_data_url)
+
+# Load the new GDP dataset
+gdp_file_path = os.path.join(path, 'usa-gdp-dataset-19612021.csv')  # Use 'path' instead of 'gdp_data_new'
+gdp_data_new = kagglehub.dataset_download("malayvyas/usa-gdp-dataset-19612021")
+
+print (vaccine_data.head())
+
+
+# Define state abbreviations
+us_state_abbrev = {
+    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+    'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+    'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+    'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD', 'Massachusetts': 'MA',
+    'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO', 'Montana': 'MT',
+    'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM',
+    'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+    'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+    'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
+}
+
+# Add state abbreviations to vaccine data
+vaccine_data['location'] = vaccine_data['location'].map(us_state_abbrev)
+vaccine_data.dropna(subset=['location'], inplace=True)
+
+# Handle missing or infinite values in vaccine data
+vaccine_data['people_fully_vaccinated'] = vaccine_data['people_fully_vaccinated'].fillna(0)
+vaccine_data['people_fully_vaccinated_per_hundred'] = vaccine_data['people_fully_vaccinated_per_hundred'].replace(0, np.nan)
+
+# Replace infinities with NaN
+vaccine_data['people_fully_vaccinated_per_hundred'].replace([np.inf, -np.inf], np.nan, inplace=True)
+
+# Calculate additional columns, ensuring no NaN or infinite values
+vaccine_data['unused_vaccines'] = vaccine_data['total_distributed'] - vaccine_data['total_vaccinations']
+vaccine_data['one_dose'] = vaccine_data['people_vaccinated'] - vaccine_data['people_fully_vaccinated']
+vaccine_data['one_dose_per_hundred'] = (vaccine_data['people_vaccinated_per_hundred'] - vaccine_data['people_fully_vaccinated_per_hundred']).round(2)
+
+# Handle potential issues with population calculation
+vaccine_data['population'] = (vaccine_data['people_fully_vaccinated'] / vaccine_data['people_fully_vaccinated_per_hundred'].replace(0, 1) * 100)
+vaccine_data['population'] = vaccine_data['population'].fillna(0).astype(int)
+
+
+
+path = kagglehub.dataset_download("solorzano/gdp-per-capita-in-us-states")
+
+# Check the directory contents to find the correct CSV file
+print("Directory contents:", os.listdir(path))
+
+# Specify the correct file path for the GDP data
+gdp_file_path = os.path.join(path, 'bea-gdp-by-state.csv')  # Adjust this to match the correct filename
+
+# Load the GDP data into a DataFrame
+gdp_data = pd.read_csv(gdp_file_path)
+
+# Check the first few rows of the GDP data to confirm
+print(gdp_data.head())
+
+# Define states and cities for analysis
+states_cities = {
+    'Florida': ['Jacksonville', 'Sarasota'],
+    'Illinois': ['Chicago', 'Springfield'],
+    'Texas': ['Houston', 'Amarillo'],
+    'California': ['Los Angeles', 'Sacramento']
+}
+
+# Example of filtering GDP and vaccine data for selected states
+selected_states = ['Florida', 'Illinois', 'Texas', 'California']
+
+# Filter vaccine data for selected states
+vaccine_data_filtered = vaccine_data[vaccine_data['location'].isin(selected_states)]
+
+# Merge vaccine data with GDP data based on state
+merged_data = pd.merge(vaccine_data_filtered, gdp_data, left_on='location', right_on='Area', how='inner')
+
+# Check the merged data
+print(merged_data.head())
+
+
+# Bar Chart
+plt.figure(figsize=(10, 6))
+x = np.arange(len(merged_data['State']))
+width = 0.4
+plt.bar(x - width/2, merged_data['people_fully_vaccinated_per_hundred'], width, label='Vaccination Rate (%)', color='blue', alpha=0.7)
+plt.bar(x + width/2, merged_data['GDP_Per_Capita'], width, label='GDP Per Capita ($)', color='green', alpha=0.7)
+plt.xticks(x, merged_data['State'])
+plt.title('Bar Chart: Vaccination Rates and GDP per Capita by State')
+plt.xlabel('State')
+plt.ylabel('Value')
+plt.legend()
+plt.show()
+
+# Scatter Plot
+plt.figure(figsize=(10, 6))
+plt.scatter(merged_data['people_fully_vaccinated_per_hundred'], merged_data['GDP_Per_Capita'], color='purple', alpha=0.7)
+plt.title('Scatter Plot: Vaccination Rates vs GDP per Capita')
+plt.xlabel('Vaccination Rate (%)')
+plt.ylabel('GDP Per Capita ($)')
+plt.grid(True)
+plt.show()
+
+# Pie Chart
+plt.figure(figsize=(10, 6))
+plt.pie(merged_data['people_fully_vaccinated_per_hundred'], labels=merged_data['State'], autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
+plt.title('Pie Chart: Share of Vaccination Rates by State')
+plt.show()
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Example GDP data
+data = {
+    'Area': ['Florida', 'Illinois', 'Texas', 'California', 'New York'],
+    '2020': [1000, 2000, 3000, 4000, 5000],
+    '2021': [1100, 2100, 3100, 4100, 5100],
+    '2022': [1200, 2200, 3200, 4200, 5200]
+}
+gdp_data = pd.DataFrame(data)
+
+# Check column names
+print("Columns in GDP data:", gdp_data.columns)
+
+# Filter GDP data for the years 2020, 2021, and 2022
+gdp_filtered = gdp_data[['Area', '2020', '2021', '2022']]
+
+# Filter for the selected states (Florida, Illinois, Texas, California)
+selected_states = ['Florida', 'Illinois', 'Texas', 'California']
+gdp_filtered = gdp_filtered[gdp_filtered['Area'].isin(selected_states)]
+
+# Reshape the data to long format for easier plotting
+gdp_long = gdp_filtered.melt(id_vars=['Area'], value_vars=['2020', '2021', '2022'],
+                             var_name='Year', value_name='GDP')
+
+# Plot histogram for GDP from 2020 to 2022
+plt.figure(figsize=(10, 6))
+
+# Plot the histogram
+plt.hist(gdp_long['GDP'], bins=10, color='green', alpha=0.7, label='GDP')
+
+plt.title('GDP Distribution for Selected Areas (2020-2022)')
+plt.xlabel('GDP per Capita ($)')
+plt.ylabel('Frequency')
+
+# Show legend
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Mock dataset creation for demonstration
+data = {
+    'State': ['State A', 'State B', 'State C', 'State D', 'State E'],
+    'people_fully_vaccinated_per_hundred': [65.4, 70.1, 55.3, 80.0, 67.8],
+    '2017': [55000, 60000, 48000, 75000, 62000]  # GDP data for 2017
+}
+
+# Create a DataFrame
+merged_data = pd.DataFrame(data)
+
+# Select the GDP for the year 2017
+merged_data['GDP_Per_Capita'] = merged_data['2017']  # For GDP per capita, we're selecting 2017
+
+# Plot histogram of vaccination rates and GDP for the selected states
+plt.figure(figsize=(10, 6))
+
+# Histogram of vaccination rates
+plt.subplot(2, 1, 1)
+plt.hist(merged_data['people_fully_vaccinated_per_hundred'], bins=5, color='blue', alpha=0.7)
+plt.title('Vaccination Rates')
+plt.xlabel('Vaccination Rate (%)')
+plt.ylabel('Frequency')
+
+# Histogram of GDP per capita
+plt.subplot(2, 1, 2)
+plt.hist(merged_data['GDP_Per_Capita'], bins=5, color='green', alpha=0.7)
+plt.title('GDP per Capita')
+plt.xlabel('GDP per Capita ($)')
+plt.ylabel('Frequency')
+
+plt.tight_layout()
+plt.show()
+
+# Correlation between vaccination rates and GDP per capita
+correlation = merged_data['people_fully_vaccinated_per_hundred'].corr(merged_data['GDP_Per_Capita'])
+print(f"Correlation between vaccination rates and GDP per capita: {correlation}")
