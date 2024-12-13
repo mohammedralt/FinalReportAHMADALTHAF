@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import kagglehub  # Assuming kagglehub is your custom module for downloading datasets
+import kagglehub  
 
 import kagglehub
 
@@ -16,7 +16,7 @@ vaccine_data = pd.read_csv(vaccine_data_url)
 
 import pandas as pd
 import numpy as np
-import kagglehub  # Assuming kagglehub is your custom module for downloading datasets
+import kagglehub  
 import os
 
 import kagglehub
